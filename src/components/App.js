@@ -17,6 +17,8 @@ import * as auth from '../utils/auth.js';
 import {CurrentUserContext} from '../contexts/CurrentUserContext';
 
 function App() {
+  const [load, setLoad] = React.useState(false);
+  const [loggedIn, setLoggedIn] = React.useState(false);
   const [isEditProfilePopupOpen, setEditProfilePopupOpen] = React.useState(false);
   const [isAddPlacePopupOpen, setAddPlacePopupOpen] = React.useState(false);
   const [isEditAvatarPopupOpen, setEditAvatarPopupOpen] = React.useState(false);
@@ -32,12 +34,17 @@ function App() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isLoadingLoader, setIsLoadingLoader] = React.useState(false);
   const [isImgPopupOpen, setImgPopupOpen] = React.useState(false);
-  const [loggedIn, setLoggedIn] = React.useState(false);
   const [userData, setUserData] = React.useState(null);
   const [isInfoTooltipPopupOpen, setIsInfoTooltipPopupOpen] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
   const [authState, setAuthState] = React.useState(false);
   const history = useHistory();
+
+  React.useEffect(() => {
+    tokenCheck();
+  
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   React.useEffect(() => {
     if (loggedIn) {
@@ -53,10 +60,6 @@ function App() {
         .finally(() => setIsLoadingLoader(false))
     }
   }, [loggedIn]);
-
-  React.useEffect(() => {
-    tokenCheck();
-  }, [] );
 
   function handleEscClose(e) {
     if (e.key === 'Escape') {
@@ -97,7 +100,7 @@ function App() {
 
   function handleUpdateUser({ name, about }) {
     setIsLoading(true);
-    api.renewUserInfo({ name, about })
+    api.setUserInfo(name, about)
       .then((res) => {
         setCurrentUser(res);
         closeAllPopups();
@@ -110,7 +113,7 @@ function App() {
 
   function handleUpdateAvatar({ avatar }) {
     setIsLoading(true);
-    api.renewUserAvatar(avatar)
+    api.setUserAvatar(avatar)
       .then((res) => {
         setCurrentUser(res);
         closeAllPopups();
@@ -123,7 +126,7 @@ function App() {
 
   function handleAddPlace({ name, link }) {
     setIsLoading(true);
-    api.createNewCard({ name, link })
+    api.setNewCard(name, link)
       .then((newCard) => {
         setCards([newCard, ...cards]);
         closeAllPopups();
@@ -135,7 +138,7 @@ function App() {
   }
 
   function handleCardLike(card) {
-    const isLiked = card.likes.some(i => i._id === currentUser._id);
+    const isLiked = card.likes.some(i => i === currentUser._id);
     api.likeCard(card._id, !isLiked)
       .then((newCard) => {
         const newCards = cards.map((c) => c._id === card._id ? newCard : c);
@@ -164,8 +167,8 @@ function App() {
   }
 
   function handleRegisterConfirm(state) {
-    setIsInfoTooltipPopupOpen(true);
     setIsSuccess(state);
+    setIsInfoTooltipPopupOpen(true);
     document.addEventListener('keydown', handleEscClose);
   }
 
@@ -188,11 +191,8 @@ function App() {
   function handleLogin({ email, password }) {
     setIsLoading(true);
     return auth.authorize(email, password)
-      .then((res) => {
-        if (res && res.token) {
-          localStorage.setItem('jwt', res.token);
-          tokenCheck();
-        }
+      .then(() => {
+        tokenCheck();
       })
       .catch((err) => {
         console.log(err);
@@ -203,30 +203,36 @@ function App() {
   }
 
   function handleSignOut() {
-    localStorage.removeItem('jwt');
-    history.push('/sign-in');
-    setLoggedIn(false);
+    return auth.signOut()
+      .then(() => {
+        setLoad(false);
+        setLoggedIn(false);
+        history.push('/sign-in');
+      })
+      .catch((err) => {
+        console.log(err);
+      })
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   function tokenCheck() {
-    const jwt = localStorage.getItem('jwt');
-    if (jwt) {
-      auth.getContent(jwt)
-        .then((res) => {
-          if (res) {
-            setUserData({
-              id: res.data._id,
-              email: res.data.email
-            });
-            setLoggedIn(true);
-            history.push('/');
-          }
-        })
-        .catch(err => {
-          console.log(err);
-          history.push('/sign-in');
-        });
-    }
+    setLoad(true);
+    auth.getContent()
+      .then((res) => {
+        if (res) {
+          setUserData({
+            id: res._id,
+            email: res.email
+          });
+          setLoggedIn(true);
+          history.push('/');
+        }
+      })
+      .catch(err => {
+        setLoad(false);
+        console.log(err);
+        history.push('/sign-in');
+      });
   }
 
   function handleAuthState(state) {
@@ -234,7 +240,6 @@ function App() {
   }
 
   return (
-    <div className="body">
     <div className="page">
       <CurrentUserContext.Provider value={currentUser}>
         <Header
@@ -242,6 +247,7 @@ function App() {
           userData={userData}
           onSignOut={handleSignOut}
           authState={authState}
+          load={load}
         />
         <Switch>
           <ProtectedRoute
@@ -257,22 +263,26 @@ function App() {
             onCardDelete={handleConfirm}
             isLoading={isLoadingLoader}
           />
-          <Route path="/sign-up">
-            <Register
-              name="register"
-              onRegister={handleRegister}
-              isLoading={isLoading}
-              onAuthState={handleAuthState}
-            />
-          </Route>
-          <Route path="/sign-in">
-            <Login
-              name="login"
-              onLogin={handleLogin}
-              isLoading={isLoading}
-              onAuthState={handleAuthState}
-            />
-          </Route>
+          {load ? '' :
+            <>
+              <Route path="/sign-up">
+                <Register
+                  name="register"
+                  onRegister={handleRegister}
+                  isLoading={isLoading}
+                  onAuthState={handleAuthState}
+                />
+              </Route>
+              <Route path="/sign-in">
+                <Login
+                  name="login"
+                  onLogin={handleLogin}
+                  isLoading={isLoading}
+                  onAuthState={handleAuthState}
+                />
+              </Route>
+            </>
+          }
           <Route>
             {loggedIn ? <Redirect to="/"/> : <Redirect to="/sign-in"/>}
           </Route>
@@ -314,7 +324,6 @@ function App() {
         />
       </CurrentUserContext.Provider>
     </div>
-  </div>
   );
 }
 

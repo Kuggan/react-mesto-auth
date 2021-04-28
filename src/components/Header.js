@@ -13,7 +13,7 @@ function Header({ loggedIn, userData, authState, onSignOut, load }) {
 
   return (
     <header className="header">
-      <div className="header__content">
+      <div className="header__container">
         <a href="/" className="logo">
           <picture>
             <source media="(max-width: 375px)" srcSet={headerLogoMin}/>
@@ -22,7 +22,7 @@ function Header({ loggedIn, userData, authState, onSignOut, load }) {
         </a>
         {loggedIn && <button
           type="button"
-          className={`popup__close ${isOpenNav ? 'popup__close_type_open' : 'popup__close_type_close'}`}
+          className={`popup__close-icon ${isOpenNav ? 'popup__close-icon_type_open' : 'popup__close-icon_type_close'}`}
           onClick={handleOpen}
         />}
         {!load &&

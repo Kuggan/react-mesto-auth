@@ -1,27 +1,17 @@
 import React from 'react';
 import PopupWithForm from './PopupWithForm';
+import {useFormValidation} from '../hooks/useFormValidation';
 
-function AddPlacePopup({isOpen, onClose, onAddPlace, isLoading}) {
-  const [name, setName] = React.useState('');
-  const [link, setLink] = React.useState('');
+function AddPlacePopup({ isOpen, onClose, onAddPlace, isLoading }) {
+  const { values, handleChange, errors, isValid, resetForm } = useFormValidation();
 
-  function handleChangeName(e) {
-    setName(e.target.value);
-  }
-
-  function handleChangeLink(e) {
-    setLink(e.target.value);
-  }
+  React.useEffect(() => {
+    resetForm();
+  }, [isOpen, resetForm]);
 
   function handleAddPlaceSubmit(e) {
     e.preventDefault();
-
-    onAddPlace({
-      name,
-      link,
-    });
-    setName('');
-    setLink('');
+    onAddPlace(values);
   }
 
   return (
@@ -30,38 +20,39 @@ function AddPlacePopup({isOpen, onClose, onAddPlace, isLoading}) {
                    isOpen={isOpen}
                    onClose={onClose}
                    onSubmit={handleAddPlaceSubmit}>
-     
-        <input className="popup__input popup__input_type_name"
+      <label className="form__label">
+        <input className="form__input"
                type="text"
                name="name"
                placeholder="Название"
-               minLength="2"
+               minLength="1"
                maxLength="30"
-               required 
-               id="title-input"
-               value={name}
-               onChange={handleChangeName}/>
-        <span className="error"
-              id="title-input-error"/>
-      
-      
-        <input className="popup__input popup__input_type_link"
+               required id="imgName-input"
+               pattern="^[а-яёА-ЯЁa-zA-Z0-9-\s]+$"
+               value={values.name || ''}
+               onChange={handleChange}/>
+        <span className={`form__input-error ${!isValid ? 'form__input-error_visible' : ''}`}
+              id="imgName-input-error">{errors.name || ''}</span>
+      </label>
+      <label className="form__label">
+        <input className="form__input"
                type="url"
                name="link"
                placeholder="Ссылка на картинку"
                required
                id="link-input"
-               value={link}
-               onChange={handleChangeLink}/>
-        <span className="error"
-              id="link-input-error"/>
-     
-      <input className="popup__submit popup__submit_add-card"
+               value={values.link || ''}
+               onChange={handleChange}
+        />
+        <span className={`form__input-error ${!isValid ? 'form__input-error_visible' : ''}`}
+              id="link-input-error">{errors.link || ''}</span>
+      </label>
+      <input className={`form__submit-button ${!isValid ? 'form__submit-button_inactive' : ''}`}
              type="submit"
              name="submit"
-             disabled={isLoading}
-             value={`${isLoading ? 'Сохранение...' : 'Создать'}`}
-             />
+             disabled={!isValid || isLoading}
+             value={`${isLoading ? 'Сохранение' : 'Создать'}`}
+      />
     </PopupWithForm>
   );
 }

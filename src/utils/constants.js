@@ -1,15 +1,10 @@
-//  const validationConfig = {
-//     formSelector: '.popup__form',
-//     inputSelector: '.popup__input',
-//     submitButtonSelector: '.popup__submit',
-//     inputInvalidClass: 'popup__input_state_invalid',
-//     buttonInvalidClass: 'popup__submit_invalid',
-//     errorClass: '.error',
-   
-//   };
-//   export default validationConfig;
+const validation = {
+  formSelector: '.form',
+  inputSelector: '.form__input',
+  submitButtonSelector: '.form__submit-button',
+  inactiveButtonClass: 'form__submit-button_inactive',
+  inputErrorClass: 'form__input_type_error',
+  errorClass: 'form__input-error_visible'
+};
 
-
-  
-  
-  
+export default validation;

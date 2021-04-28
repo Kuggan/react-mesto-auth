@@ -1,32 +1,24 @@
 import React from 'react';
 import PopupWithForm from './PopupWithForm';
 import {CurrentUserContext} from "../contexts/CurrentUserContext";
+import {useFormValidation} from '../hooks/useFormValidation';
 
-function EditProfilePopup({isOpen, onClose, onUpdateUser, isLoading}) {
+function EditProfilePopup({ isOpen, onClose, onUpdateUser, isLoading }) {
   const currentUser = React.useContext(CurrentUserContext);
-  const [name, setName] = React.useState(currentUser.name);
-  const [description, setDescription] = React.useState(currentUser.about);
+  const { values, handleChange, errors, isValid, resetForm } = useFormValidation();
 
-  function handleChangeName(e) {
-    setName(e.target.value);
-  }
-
-  function handleChangeDescription(e) {
-    setDescription(e.target.value);
-  }
+  React.useEffect(() => {
+    if (currentUser) {
+      if (isOpen) {
+        resetForm(currentUser);
+      }
+    }
+  }, [isOpen, currentUser, resetForm]);
 
   function handleSubmit(e) {
     e.preventDefault();
-    onUpdateUser({
-      name,
-      about: description,
-    });
+    onUpdateUser(values);
   }
-
-  React.useEffect(() => {
-    setName(currentUser.name);
-    setDescription(currentUser.about);
-  }, [currentUser]);
 
   return (
     <PopupWithForm name="edit"
@@ -34,39 +26,40 @@ function EditProfilePopup({isOpen, onClose, onUpdateUser, isLoading}) {
                    isOpen={isOpen}
                    onClose={onClose}
                    onSubmit={handleSubmit}>
-      
-        <input className="popup__input popup__input_enter_name"
+      <label className="form__label">
+        <input className="form__input"
                type="text"
                name="name"
                placeholder="Ваше имя"
                minLength="2"
                maxLength="40"
-               required 
+               required pattern="^[а-яёА-ЯЁa-zA-Z-\s]+$"
                id="name-input"
-               value={name}
-               onChange={handleChangeName}/>
-        <span className="error"
-              id="name-input-error"/>
-      
-     
-        <input className="popup__input popup__input_enter_description"
+               value={values.name || ''}
+               onChange={handleChange}/>
+        <span className={`form__input-error ${!isValid ? 'form__input-error_visible' : ''}`}
+              id="name-input-error">{errors.name || ''}</span>
+      </label>
+      <label className="form__label">
+        <input className="form__input"
                type="text"
                name="about"
                placeholder="Ваша профессия"
                minLength="2"
                maxLength="200"
-               required
-               id="about-input"
-               value={description}
-               onChange={handleChangeDescription}/>
-        <span className="error"
-              id="about-input-error"/>
-      
-      <input className="popup__submit popup__submit_description"
+               required id="profession-input"
+               pattern="^[а-яёА-ЯЁa-zA-Z0-9-\s]+$"
+               value={values.about || ''}
+               onChange={handleChange}
+        />
+        <span className={`form__input-error ${!isValid ? 'form__input-error_visible' : ''}`}
+              id="profession-input-error">{errors.about || ''}</span>
+      </label>
+      <input className={`form__submit-button ${!isValid ? 'form__submit-button_inactive' : ''}`}
              type="submit"
              name="submit"
-             disabled={isLoading}
-             value={`${isLoading ? 'Сохранение...' : 'Сохранить'}`}/>
+             disabled={!isValid || isLoading}
+             value={`${isLoading ? 'Сохранение' : 'Сохранить'}`}/>
     </PopupWithForm>
   );
 }

@@ -1,4 +1,5 @@
-export const BASE_URL = 'https://auth.nomoreparties.co';
+export const BASE_URL = 'https://api.mestokuggan.nomoredomains.club';
+
 
 export const register = (email, password) => {
   return fetch(`${BASE_URL}/signup`, {
@@ -10,10 +11,14 @@ export const register = (email, password) => {
     body: JSON.stringify({ email, password })
   })
     .then((res) => {
-      if (res.status !== 400) {
+      if (res.status === 400) {
+        throw new Error('Некорректно заполнено одно из полей');
+      } else if (res.status === 409) {
+        throw new Error('Email занят');
+      } else if (res.status === 200) {
         return res.json();
       }
-      throw new Error('Некорректно заполнено одно из полей');
+      throw new Error('Ошибка сервера');
     })
 };
 
@@ -24,11 +29,12 @@ export const authorize = (email, password) => {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     },
+    'credentials': 'include',
     body: JSON.stringify({ email, password })
   })
     .then(res => {
       if (res.status === 200) {
-        return res.json();
+        return;
       }
       if (res.status === 400) {
         throw new Error('Не передано одно из полей');
@@ -40,25 +46,39 @@ export const authorize = (email, password) => {
     })
 };
 
-export const getContent = (token) => {
+export const getContent = () => {
   return fetch(`${BASE_URL}/users/me`, {
     method: 'GET',
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    }
+      
+    },
+    'credentials': 'include',
   })
     .then((res) => {
       if (res.status === 200) {
         return res.json();
       }
-      if (res.status === 400) {
+      if (res.status === 401) {
         throw new Error('Токен не передан или передан не в том формате');
       }
-      if (res.status === 401) {
+      if (res.status === 400) {
         throw new Error('Переданный токен некорректен');
       }
       throw new Error(`Ошибка токена: ${res.status}`);
+    })
+};
+
+export const signOut = () => {
+  return fetch(`${BASE_URL}/signout`, {
+    method: 'POST',
+    
+  })
+    .then((res) => {
+      if (res.status === 200) {
+        return;
+      }
+      throw new Error(`Ошибка: ${res.status}`);
     })
 };

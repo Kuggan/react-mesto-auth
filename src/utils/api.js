@@ -1,88 +1,151 @@
 class Api {
-    constructor({ url, headers }) {
-      this._url = url;
-      this._headers = headers;
-    }
-    _handleOriginalRes(res) {
-      if (!res.ok) {
-        return Promise.reject(`Ошибка: ${res.status}`);
-      }
-      return res.json();
-    }
-      
-    getUserInfo() {
-      return fetch(`${this._url}/users/me`, {
-        method: 'GET',
-        headers: this._headers,
-      }).then(this._handleOriginalRes);
-    }
-    renewUserInfo({name, about}) {
-      return fetch(`${this._url}/users/me`, {
-        method: 'PATCH',
-        headers: this._headers,
-        body: JSON.stringify({
-          name: name,
-          about: about
-        }),
-      }).then(this._handleOriginalRes);
-    }
-    renewUserAvatar(avatar) {
-      return fetch(`${this._url}/users/me/avatar`, {
-        method: 'PATCH',
-        headers: this._headers,
-        body: JSON.stringify({ avatar: avatar }),
-      }).then(this._handleOriginalRes);
-
-      
-    }
-    getInitialCards() {
-      return fetch(`${this._url}/cards`, {
-        method: 'GET',
-        headers: this._headers,
-      }).then(this._handleOriginalRes);
-    }
-  
-    createNewCard({name, link}) {
-      return fetch(`${this._url}/cards`, {
-        method: 'POST',
-        headers: this._headers,
-        body: JSON.stringify({ name: name, link: link }),
-      }).then(this._handleOriginalRes);
-    }
-
-    deleteCard(cardId) {
-      return fetch(`${this._url}/cards/${cardId}`, {
-        method: 'DELETE',
-        headers: this._headers,
-      }).then(this._handleOriginalRes);
-    }
-
-
-    likeCard(cardId, isLiked) {
-       let method = '';
-       if(!isLiked){
-         method ='DELETE';
-       } else{
-         method = 'PUT';
-       }
-
-      return fetch(`${this._url}/cards/likes/${cardId}`, {
-        method: method,
-        headers: this._headers,
-        body : JSON.stringify({
-          _id: cardId
-        })
-      }).then(this._handleOriginalRes);
-    }
+  constructor({ baseUrl }) {
+    this._baseUrl = baseUrl;
   }
 
-  const api = new Api({
-    url: 'https://mesto.nomoreparties.co/v1/cohort-19',
-    headers: {
-      authorization: '92a26d6c-40ed-4aca-ae57-01c4984e9943',
-      'Content-Type': 'application/json',
-    },
-  });
-   
-  export default api;
-  
+  getInitialCards() {
+    return fetch(`${this._baseUrl}/cards`, {
+     method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      'credentials': 'include',
+    })
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        }
+      });
+  }
+
+  getUserInfo() {
+    return fetch(`${this._baseUrl}/users/me`, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      'credentials': 'include',
+    })
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        }
+        return Promise.reject(`Ошибка: ${res.status}`);
+      })
+  }
+
+  setUserInfo(name, about) {
+    return fetch(`${this._baseUrl}/users/me`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      'credentials': 'include',
+      body: JSON.stringify({
+        name: name,
+        about: about
+      })
+    })
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        }
+        if (res.status === 400) {
+          return Promise.reject('Введенные данные некорректны');
+        }
+        return Promise.reject(`Ошибка: ${res.status}`);
+      });
+  }
+
+  setNewCard(name, link) {
+    return fetch(`${this._baseUrl}/cards`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      'credentials': 'include',
+      body: JSON.stringify({
+        name: name,
+        link: link
+      })
+    })
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        }
+        if (res.status === 400) {
+          return Promise.reject('Введенные данные некорректны');
+        }
+        return Promise.reject(`Ошибка: ${res.status}`);
+      })
+  }
+
+  deleteCard(cardId) {
+    return fetch(`${this._baseUrl}/cards/${cardId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      'credentials': 'include',
+    })
+      .then(res => {
+        if (res.ok) {
+          return (`Карточка с id: ${cardId} удалена`);
+        }
+        return Promise.reject(`Ошибка: ${res.status}`);
+      })
+  }
+
+  likeCard(cardId, isLiked) {
+    let method = '';
+    if (!isLiked) {
+      method = 'DELETE';
+    } else {
+      method = 'PUT';
+    }
+    return fetch(`${this._baseUrl}/cards/${cardId}/likes`, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      'credentials': 'include',
+      body: JSON.stringify({
+        _id: cardId
+      })
+    })
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        }
+        return Promise.reject(`Ошибка: ${res.status}`);
+      })
+  }
+
+  setUserAvatar(avatar) {
+    return fetch(`${this._baseUrl}/users/me/avatar`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      'credentials': 'include',
+      body: JSON.stringify({
+        avatar: avatar
+      })
+    })
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        }
+        if (res.status === 400) {
+          return Promise.reject('Введенные данные некорректны');
+        }
+        return Promise.reject(`Ошибка: ${res.status}`);
+      })
+  }
+}
+
+const api = new Api({
+  baseUrl: 'https://api.mestokuggan.nomoredomains.club'
+ 
+});
+
+export default api;

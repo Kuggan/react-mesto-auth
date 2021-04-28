@@ -8,19 +8,19 @@ function ConfirmPopup({onClose, isOpen, onCardDelete, isLoading}) {
     onCardDelete();
   }
 
-  return(
+  return (
     <PopupWithForm
-      name="question"
+      name="confirm"
       title="Вы уверены?"
       isOpen={isOpen}
       onClose={onClose}
       onSubmit={handleSubmit}>
       <input type="submit"
-             className="popup__submit popup__submit_question"
+             className="form__submit-button form__submit-button_type_confirm"
              disabled={isLoading}
-             value={`${isLoading ? 'Удаление...' : 'Да'}`}/>
+             value={`${isLoading ? 'Удаление' : 'Да'}`}/>
     </PopupWithForm>
   );
 }
-export default ConfirmPopup;
 
+export default ConfirmPopup;
